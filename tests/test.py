@@ -51,7 +51,7 @@ class TestHydrusMethods(unittest.TestCase):
             )
             print(apikey)
             self.assertEqual(len(apikey), 64)
-        except HTTPError as e:
+        except HTTPError:
             self.assertEqual("Request New Permissions Window Not Open", "")
 
     def test_session_key(self):
@@ -62,3 +62,12 @@ class TestHydrusMethods(unittest.TestCase):
         sessionkey = self.hydrus.get_session_key()
         print(sessionkey)
         self.assertEqual(len(sessionkey), 64)
+
+    def test_verify_access_key(self):
+        """
+        Test verifying the access key
+        """
+
+        verify = self.hydrus.get_verify_access_key()
+        print(verify)
+        self.assertEqual(verify.name, "Testing")

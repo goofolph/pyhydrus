@@ -35,6 +35,17 @@ class _HydrusSessionKey(BaseModel):
     session_key: str
 
 
+class _HydrusVerifyAccessKey(BaseModel):
+    """
+    The type definition of verify access key response
+    """
+
+    name: str
+    permits_everything: bool
+    basic_permissions: List[int]
+    human_description: str
+
+
 class Hydrus:
     """
     The main class for the hydrus API.
@@ -132,3 +143,14 @@ class Hydrus:
         resp = self._get(url)
         self._sessionkey = _HydrusSessionKey(**resp.json()).session_key
         return self._sessionkey
+
+    def get_verify_access_key(self) -> _HydrusVerifyAccessKey:
+        """
+        Verify the access key name and permissions.
+
+        :return: The verify access key response
+        """
+
+        url = f"{self._base_url}/verify_access_key"
+        resp = self._get(url)
+        return _HydrusVerifyAccessKey(**resp.json())
