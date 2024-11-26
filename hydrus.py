@@ -27,6 +27,14 @@ class _HydrusRequestNewPermission(BaseModel):
     access_key: str
 
 
+class _HydrusSessionKey(BaseModel):
+    """
+    The type definition of session key response
+    """
+
+    session_key: str
+
+
 class Hydrus:
     """
     The main class for the hydrus API.
@@ -110,3 +118,17 @@ class Hydrus:
 
         resp = self._get(url, params=arguments)
         return _HydrusRequestNewPermission(**resp.json()).access_key
+
+    def get_session_key(self) -> str:
+        """
+        Get the session key for hydrus.
+
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#session_key
+
+        :return: The session key string for hydrus.
+        """
+
+        url = f"{self._base_url}/session_key"
+        resp = self._get(url)
+        self._sessionkey = _HydrusSessionKey(**resp.json()).session_key
+        return self._sessionkey
