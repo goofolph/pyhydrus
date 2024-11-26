@@ -20,7 +20,6 @@ class TestHydrusMethods(unittest.TestCase):
         with open("config.yml", mode="r", encoding="utf8") as f:
             try:
                 config = yaml.safe_load(f)
-                print("config:", config)
                 url = config["url"]
                 api_key = config["api_key"]
             except yaml.YAMLError as e:
@@ -36,3 +35,15 @@ class TestHydrusMethods(unittest.TestCase):
         version = self.hydrus.get_version()
         self.assertEqual(type(version), str)
         self.assertGreaterEqual(version, "599.75")
+
+    def test_request_new_permissions(self):
+        """
+        Test the request new permissions method of Hydrus class
+        """
+
+        apikey = self.hydrus.get_request_new_permissions(
+            "Testing",
+            False,
+            [0, 1],
+        )
+        self.assertGreater(len(apikey), 0)

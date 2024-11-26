@@ -86,3 +86,27 @@ class Hydrus:
         version = _HydrusApiVersion(**resp.json())
         return f"{version.hydrus_version}.{version.version}"
 
+    def get_request_new_permissions(
+        self, name: str, permits_everything: bool, basic_permissions: List[int]
+    ) -> str:
+        """
+        Request new API key with specified permissions.
+
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#request_new_permissions
+
+        :param name: The descriptive name of your access.
+        :param permits_everything: Whether to permit all tasks now and in future.
+        :param basic_permissions: A list of numerical permission identifiers you want to request.
+        :return: The new API for requested permissions
+        """
+
+        url = f"{self._base_url}/request_new_permissions"
+
+        arguments = {"name": name}
+        if permits_everything:
+            arguments["permits_everything"] = True
+        if basic_permissions:
+            arguments["basic_permissions"] = quote(json.dumps(basic_permissions))
+
+        resp = self._get(url, params=arguments)
+        return _HydrusRequestNewPermission(**resp.json()).access_key

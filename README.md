@@ -17,4 +17,8 @@ Create venv folder and activate before all uses.
 ```
 ## Test
 
+Open the Hydrus client and enable the client API before running tests.
+
 python -m unittest tests/test.py
+
+Some tests such as request_new_permissions will fail unless the matching menu is open in the hydrus client.
