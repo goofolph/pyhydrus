@@ -34,7 +34,6 @@ class TestHydrusMethods(unittest.TestCase):
         Test the version method of Hydrus class
         """
         version = self.hydrus.get_version()
-        print(version)
         self.assertEqual(type(version), str)
         self.assertGreaterEqual(version, "599.75")
 
@@ -49,7 +48,6 @@ class TestHydrusMethods(unittest.TestCase):
                 False,
                 [0, 1],
             )
-            print(apikey)
             self.assertEqual(len(apikey), 64)
         except HTTPError:
             self.assertEqual("Request New Permissions Window Not Open", "")
@@ -60,7 +58,6 @@ class TestHydrusMethods(unittest.TestCase):
         """
 
         sessionkey = self.hydrus.get_session_key()
-        print(sessionkey)
         self.assertEqual(len(sessionkey), 64)
 
     def test_verify_access_key(self):
@@ -69,5 +66,4 @@ class TestHydrusMethods(unittest.TestCase):
         """
 
         verify = self.hydrus.get_verify_access_key()
-        print(verify)
         self.assertEqual(verify.name, "Testing")

@@ -59,8 +59,8 @@ class Hydrus:
         :param apikey: The API key to use with the hydrus API.
         :return: returns nothing
         """
-        self._apikey = apikey
-        self._sessionkey = None
+        self._api_key = apikey
+        self._session_key = None
         self._base_url = url
         if not self._base_url or len(self._base_url.strip()) == 0:
             self._base_url = "http://127.0.0.1:45869"
@@ -77,15 +77,22 @@ class Hydrus:
         """
 
         if not headers:
-            if self._sessionkey:
-                headers = {"Hydrus-Client-API-Session-Key": self._sessionkey}
-            if self._apikey:
-                headers = {"Hydrus-Client-API-Access-Key": self._apikey}
+            if self._session_key:
+                headers = {"Hydrus-Client-API-Session-Key": self._session_key}
+            if self._api_key:
+                headers = {"Hydrus-Client-API-Access-Key": self._api_key}
         else:
-            if self._sessionkey:
-                headers["Hydrus-Client-API-Session-Key"] = self._sessionkey
-            if self._apikey:
-                headers["Hydrus-Client-API-Access-Key"] = self._apikey
+            if self._session_key:
+                headers["Hydrus-Client-API-Session-Key"] = self._session_key
+            if self._api_key:
+                headers["Hydrus-Client-API-Access-Key"] = self._api_key
+
+        if params:
+            for key, value in params.items():
+                if isinstance(value, str):
+                    params[key] = quote(value)
+                else:
+                    params[key] = quote(json.dumps(value))
 
         resp = self._session.get(url, params=params, headers=headers)
         resp.raise_for_status()
@@ -125,7 +132,8 @@ class Hydrus:
         if permits_everything:
             arguments["permits_everything"] = True
         if basic_permissions:
-            arguments["basic_permissions"] = quote(json.dumps(basic_permissions))
+            # arguments["basic_permissions"] = quote(json.dumps(basic_permissions))
+            arguments["basic_permissions"] = basic_permissions
 
         resp = self._get(url, params=arguments)
         return _HydrusRequestNewPermission(**resp.json()).access_key
@@ -141,8 +149,8 @@ class Hydrus:
 
         url = f"{self._base_url}/session_key"
         resp = self._get(url)
-        self._sessionkey = _HydrusSessionKey(**resp.json()).session_key
-        return self._sessionkey
+        self._session_key = _HydrusSessionKey(**resp.json()).session_key
+        return self._session_key
 
     def get_verify_access_key(self) -> _HydrusVerifyAccessKey:
         """
