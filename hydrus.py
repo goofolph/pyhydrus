@@ -98,6 +98,13 @@ class HydrusServiceType(IntEnum):
     server_administration = 99
 
 
+class HydrusServiceStarShape(str, Enum):
+    circle = "circle"
+    square = "square"
+    fat = "fat star"
+    pentagram = "pentagram star"
+
+
 class HydrusService(BaseModel):
     """
     The type definition of service
@@ -107,6 +114,29 @@ class HydrusService(BaseModel):
     service_key: str
     service_type: HydrusServiceType = Field(alias="type")
     type_pretty: str
+    star_shape: Optional[HydrusServiceStarShape] = None
+    min_stars: Optional[int] = None
+    max_stars: Optional[int] = None
+
+
+class HydrusServices(BaseModel):
+    """
+    The type definition of the services object
+
+    https://hydrusnetwork.github.io/hydrus/developer_api.html#services_object
+    """
+
+    local_tags: List[HydrusService]
+    tag_repositories: List[HydrusService]
+    local_files: List[HydrusService]
+    local_updates: List[HydrusService]
+    file_repositories: List[HydrusService]
+    all_local_files: List[HydrusService]
+    all_local_media: List[HydrusService]
+    all_known_files: List[HydrusService]
+    all_known_tags: List[HydrusService]
+    trash: List[HydrusService]
+    services: dict
 
 
 class Hydrus:
@@ -255,3 +285,33 @@ class Hydrus:
         url = f"{self._base_url}/get_service"
         resp = self.__get__(url, params=params)
         return HydrusService(**resp.json()["service"])
+
+    def get_services(self) -> List[HydrusService]:
+        """
+        Ask the client about its services.
+
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#get_services
+
+        :return: HydrusServices
+        """
+
+        url = f"{self._base_url}/get_services"
+        all_services = []
+        all_service_keys = []
+        resp = self.__get__(url)
+        services = resp.json()
+
+        for key in [key for key in services.keys() if key not in ["services", "version", "hydrus_version"]]:
+            for serv in services[key]:
+                if serv["service_key"] not in all_service_keys:
+                    all_service_keys.append(serv["service_key"])
+                    all_services.append(HydrusService(**serv))
+
+        # Need to parse these differently, service_key isn't inside the object but is the key. Can contain duplicates and contains the rating services not included elsewhere
+        for key, value in services["services"].items():
+            value["service_key"] = key
+            if key not in all_service_keys:
+                all_service_keys.append(key)
+                all_services.append(HydrusService(**value))
+
+        return all_services

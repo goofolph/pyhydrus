@@ -7,7 +7,7 @@ import unittest
 import yaml
 from rich import print
 from curl_cffi.requests.exceptions import HTTPError
-from hydrus import Hydrus, HydrusServiceType
+import hydrus
 
 
 class TestHydrusMethods(unittest.TestCase):
@@ -72,11 +72,21 @@ class TestHydrusMethods(unittest.TestCase):
 
     def test_get_service(self):
         """
-        Test getting services
+        Test getting a service
         """
 
         service = self.hydrus.get_service("my tags")
-        assert isinstance(service.name, str)
-        assert service.name == "my tags"
-        assert isinstance(service.service_type, HydrusServiceType)
-        assert isinstance(service.type_pretty, str)
+        self.assertTrue(isinstance(service.name, str))
+        self.assertEqual(service.name, "my tags")
+        self.assertTrue(isinstance(service.service_type, hydrus.HydrusServiceType))
+        self.assertTrue(isinstance(service.type_pretty, str))
+
+    def test_get_services(self):
+        """
+        Test getting services
+        """
+
+        services = self.hydrus.get_services()
+        self.assertNotEqual(services, None)
+        self.assertTrue(isinstance(services, list))
+        self.assertTrue(isinstance(services[0], hydrus.HydrusService))
