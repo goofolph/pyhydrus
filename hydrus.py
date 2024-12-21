@@ -67,7 +67,7 @@ class Hydrus:
 
         self._session = requests.Session(impersonate="chrome")
 
-    def _get(self, url, params=None, headers=None) -> requests.Response:
+    def __get__(self, url, params=None, headers=None) -> requests.Response:
         """
         Make a request to the Hydrus client using specified keys, parameters, and headers.
 
@@ -108,7 +108,7 @@ class Hydrus:
         """
 
         url = f"{self._base_url}/api_version"
-        resp = self._get(url)
+        resp = self.__get__(url)
         version = _HydrusApiVersion(**resp.json())
         return f"{version.hydrus_version}.{version.version}"
 
@@ -135,7 +135,7 @@ class Hydrus:
             # arguments["basic_permissions"] = quote(json.dumps(basic_permissions))
             arguments["basic_permissions"] = basic_permissions
 
-        resp = self._get(url, params=arguments)
+        resp = self.__get__(url, params=arguments)
         return _HydrusRequestNewPermission(**resp.json()).access_key
 
     def get_session_key(self) -> str:
@@ -148,7 +148,7 @@ class Hydrus:
         """
 
         url = f"{self._base_url}/session_key"
-        resp = self._get(url)
+        resp = self.__get__(url)
         self._session_key = _HydrusSessionKey(**resp.json()).session_key
         return self._session_key
 
@@ -160,5 +160,5 @@ class Hydrus:
         """
 
         url = f"{self._base_url}/verify_access_key"
-        resp = self._get(url)
+        resp = self.__get__(url)
         return _HydrusVerifyAccessKey(**resp.json())
