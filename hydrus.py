@@ -299,13 +299,17 @@ class Hydrus:
         :return: HydrusServices
         """
 
-        url = f"{self._base_url}/get_services"
+        url = f"{self.base_url}/get_services"
         all_services = []
         all_service_keys = []
         resp = self.__get__(url)
         services = resp.json()
 
-        for key in [key for key in services.keys() if key not in ["services", "version", "hydrus_version"]]:
+        for key in [
+            key
+            for key in services.keys()
+            if key not in ["services", "version", "hydrus_version"]
+        ]:
             for serv in services[key]:
                 if serv["service_key"] not in all_service_keys:
                     all_service_keys.append(serv["service_key"])
