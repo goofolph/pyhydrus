@@ -219,6 +219,8 @@ class Hydrus:
         """
         Verify the access key name and permissions.
 
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#verify_access_key
+
         :return: The verify access key response
         """
 
