@@ -172,7 +172,7 @@ class Hydrus:
 
         url = f"{self._base_url}/api_version"
         resp = self.__get__(url)
-        version = _HydrusApiVersion(**resp.json())
+        version = HydrusApiVersion(**resp.json())
         return f"{version.hydrus_version}.{version.version}"
 
     def get_request_new_permissions(
@@ -199,7 +199,7 @@ class Hydrus:
             arguments["basic_permissions"] = basic_permissions
 
         resp = self.__get__(url, params=arguments)
-        return _HydrusRequestNewPermission(**resp.json()).access_key
+        return HydrusRequestNewPermission(**resp.json()).access_key
 
     def get_session_key(self) -> str:
         """
@@ -212,10 +212,10 @@ class Hydrus:
 
         url = f"{self._base_url}/session_key"
         resp = self.__get__(url)
-        self._session_key = _HydrusSessionKey(**resp.json()).session_key
+        self._session_key = HydrusSessionKey(**resp.json()).session_key
         return self._session_key
 
-    def get_verify_access_key(self) -> _HydrusVerifyAccessKey:
+    def get_verify_access_key(self) -> HydrusVerifyAccessKey:
         """
         Verify the access key name and permissions.
 
@@ -224,7 +224,7 @@ class Hydrus:
 
         url = f"{self._base_url}/verify_access_key"
         resp = self.__get__(url)
-        return _HydrusVerifyAccessKey(**resp.json())
+        return HydrusVerifyAccessKey(**resp.json())
 
     def get_service(
         self,
