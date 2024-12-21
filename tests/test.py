@@ -167,7 +167,7 @@ class TestHydrusMethods(unittest.TestCase):
         )
         self.assertEqual(added.filehash, image_hash)
 
-    def test_delete_file(self):
+    def test_delete_files(self):
         """
         Test deleting files
         """
@@ -177,4 +177,17 @@ class TestHydrusMethods(unittest.TestCase):
 
         self.hydrus.add_file(image_path)
 
-        self.hydrus.delete_file(file_hash=image_hash)
+        self.hydrus.delete_files(file_hash=image_hash)
+
+    def test_undelete_files(self):
+        """
+        Test undeleting files
+        """
+
+        image_path = generate_random_image("image.jpg")
+        image_hash = get_sha256(image_path)
+
+        self.hydrus.add_file(image_path)
+
+        self.hydrus.delete_files(file_hash=image_hash)
+        self.hydrus.undelete_files(file_hash=image_hash)
