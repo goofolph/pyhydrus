@@ -6,6 +6,7 @@ import json
 from typing import List, Optional
 from urllib.parse import quote
 from enum import Enum, IntEnum
+from time import sleep
 from pydantic import BaseModel, Field
 from rich import print
 from curl_cffi import requests
@@ -98,6 +99,13 @@ class HydrusServiceType(IntEnum):
     server_administration = 99
 
 
+class HydrusServiceStarShape(str, Enum):
+    circle = "circle"
+    square = "square"
+    fat = "fat star"
+    pentagram = "pentagram star"
+
+
 class HydrusService(BaseModel):
     """
     The type definition of service
@@ -107,6 +115,29 @@ class HydrusService(BaseModel):
     service_key: str
     service_type: HydrusServiceType = Field(alias="type")
     type_pretty: str
+    star_shape: Optional[HydrusServiceStarShape] = None
+    min_stars: Optional[int] = None
+    max_stars: Optional[int] = None
+
+
+class HydrusServices(BaseModel):
+    """
+    The type definition of the services object
+
+    https://hydrusnetwork.github.io/hydrus/developer_api.html#services_object
+    """
+
+    local_tags: List[HydrusService]
+    tag_repositories: List[HydrusService]
+    local_files: List[HydrusService]
+    local_updates: List[HydrusService]
+    file_repositories: List[HydrusService]
+    all_local_files: List[HydrusService]
+    all_local_media: List[HydrusService]
+    all_known_files: List[HydrusService]
+    all_known_tags: List[HydrusService]
+    trash: List[HydrusService]
+    services: dict
 
 
 class Hydrus:
@@ -122,11 +153,11 @@ class Hydrus:
         :param apikey: The API key to use with the hydrus API.
         :return: returns nothing
         """
-        self._api_key = apikey
-        self._session_key = None
-        self._base_url = url
-        if not self._base_url or len(self._base_url.strip()) == 0:
-            self._base_url = "http://127.0.0.1:45869"
+        self.__api_key__ = apikey
+        self.__session_key__ = None
+        self.base_url = url
+        if not self.base_url or len(self.base_url.strip()) == 0:
+            self.base_url = "http://127.0.0.1:45869"
 
         self._session = requests.Session(impersonate="chrome")
 
@@ -142,10 +173,10 @@ class Hydrus:
         if headers is None:
             headers = {}
 
-        if self._session_key:
-            headers["Hydrus-Client-API-Session-Key"] = self._session_key
-        elif self._api_key:
-            headers["Hydrus-Client-API-Access-Key"] = self._api_key
+        if self.__session_key__:
+            headers["Hydrus-Client-API-Session-Key"] = self.__session_key__
+        elif self.__api_key__:
+            headers["Hydrus-Client-API-Access-Key"] = self.__api_key__
 
         if "Accept" not in headers:
             headers["Accept"] = "application/json"
@@ -157,6 +188,7 @@ class Hydrus:
                 else:
                     params[key] = quote(json.dumps(value))
 
+        sleep(0.1)
         resp = self._session.get(url, params=params, headers=headers)
         resp.raise_for_status()
         return resp
@@ -170,7 +202,7 @@ class Hydrus:
         :return: The version string for hydrus.
         """
 
-        url = f"{self._base_url}/api_version"
+        url = f"{self.base_url}/api_version"
         resp = self.__get__(url)
         version = HydrusApiVersion(**resp.json())
         return f"{version.hydrus_version}.{version.version}"
@@ -189,7 +221,7 @@ class Hydrus:
         :return: The new API for requested permissions
         """
 
-        url = f"{self._base_url}/request_new_permissions"
+        url = f"{self.base_url}/request_new_permissions"
 
         arguments = {"name": name}
         if permits_everything:
@@ -210,10 +242,10 @@ class Hydrus:
         :return: The session key string for hydrus.
         """
 
-        url = f"{self._base_url}/session_key"
+        url = f"{self.base_url}/session_key"
         resp = self.__get__(url)
-        self._session_key = HydrusSessionKey(**resp.json()).session_key
-        return self._session_key
+        self.__session_key__ = HydrusSessionKey(**resp.json()).session_key
+        return self.__session_key__
 
     def get_verify_access_key(self) -> HydrusVerifyAccessKey:
         """
@@ -224,7 +256,7 @@ class Hydrus:
         :return: The verify access key response
         """
 
-        url = f"{self._base_url}/verify_access_key"
+        url = f"{self.base_url}/verify_access_key"
         resp = self.__get__(url)
         return HydrusVerifyAccessKey(**resp.json())
 
@@ -241,6 +273,8 @@ class Hydrus:
         :param name: Name of the service
         :param key: hxe string key of the service
 
+        :return: HydrusService
+
         """
 
         assert name is None or isinstance(name, str)
@@ -252,6 +286,40 @@ class Hydrus:
         if key:
             params = {"service_key": key}
 
-        url = f"{self._base_url}/get_service"
+        url = f"{self.base_url}/get_service"
         resp = self.__get__(url, params=params)
         return HydrusService(**resp.json()["service"])
+
+    def get_services(self) -> List[HydrusService]:
+        """
+        Ask the client about its services.
+
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#get_services
+
+        :return: HydrusServices
+        """
+
+        url = f"{self.base_url}/get_services"
+        all_services = []
+        all_service_keys = []
+        resp = self.__get__(url)
+        services = resp.json()
+
+        for key in [
+            key
+            for key in services.keys()
+            if key not in ["services", "version", "hydrus_version"]
+        ]:
+            for serv in services[key]:
+                if serv["service_key"] not in all_service_keys:
+                    all_service_keys.append(serv["service_key"])
+                    all_services.append(HydrusService(**serv))
+
+        # Need to parse these differently, service_key isn't inside the object but is the key. Can contain duplicates and contains the rating services not included elsewhere
+        for key, value in services["services"].items():
+            value["service_key"] = key
+            if key not in all_service_keys:
+                all_service_keys.append(key)
+                all_services.append(HydrusService(**value))
+
+        return all_services
