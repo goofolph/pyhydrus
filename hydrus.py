@@ -132,23 +132,23 @@ class Hydrus:
 
     def __get__(self, url, params=None, headers=None) -> requests.Response:
         """
-        Make a request to the Hydrus client using specified keys, parameters, and headers.
+        Make a request to the Hydrus client using available keys, parameters, and headers.
 
         :param url: The URL to API endpoint.
         :param params: Parameters to be sent in the request URL.
         :param headers: Headers for the request.
         """
 
-        if not headers:
-            if self._session_key:
-                headers = {"Hydrus-Client-API-Session-Key": self._session_key}
-            if self._api_key:
-                headers = {"Hydrus-Client-API-Access-Key": self._api_key}
-        else:
-            if self._session_key:
-                headers["Hydrus-Client-API-Session-Key"] = self._session_key
-            if self._api_key:
-                headers["Hydrus-Client-API-Access-Key"] = self._api_key
+        if headers is None:
+            headers = {}
+
+        if self._session_key:
+            headers["Hydrus-Client-API-Session-Key"] = self._session_key
+        elif self._api_key:
+            headers["Hydrus-Client-API-Access-Key"] = self._api_key
+
+        if "Accept" not in headers:
+            headers["Accept"] = "application/json"
 
         if params:
             for key, value in params.items():
