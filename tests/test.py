@@ -5,8 +5,9 @@ This is the test entrypoint for the module.
 import sys
 import unittest
 import yaml
-from hydrus import Hydrus
+from rich import print
 from curl_cffi.requests.exceptions import HTTPError
+from hydrus import Hydrus, HydrusServiceType
 
 
 class TestHydrusMethods(unittest.TestCase):
@@ -67,3 +68,14 @@ class TestHydrusMethods(unittest.TestCase):
 
         verify = self.hydrus.get_verify_access_key()
         self.assertEqual(verify.name, "Testing")
+
+    def test_get_service(self):
+        """
+        Test getting services
+        """
+
+        service = self.hydrus.get_service("my tags")
+        assert isinstance(service.name, str)
+        assert service.name == "my tags"
+        assert isinstance(service.service_type, HydrusServiceType)
+        assert isinstance(service.type_pretty, str)

@@ -3,9 +3,10 @@ This module contains the main class for the hydrus API.
 """
 
 import json
-from typing import List
+from typing import List, Optional
 from urllib.parse import quote
-from pydantic import BaseModel
+from enum import Enum, IntEnum
+from pydantic import BaseModel, Field
 from rich import print
 from curl_cffi import requests
 
@@ -44,6 +45,39 @@ class _HydrusVerifyAccessKey(BaseModel):
     permits_everything: bool
     basic_permissions: List[int]
     human_description: str
+
+
+class HydrusServiceType(IntEnum):
+    tag_repository = 0
+    file_repository = 1
+    local_file_domain = 2
+    local_tag_domain = 5
+    numerical_rating_service = 6
+    like_rating_service = 7
+    all_known_tags = 10
+    all_known_files = 11
+    the_local_booru = 12
+    IPFS = 13
+    trash = 14
+    all_local_files = 15
+    file_notes = 17
+    Client_API = 18
+    deleted_from_anywhere = 19
+    local_updates = 20
+    all_my_files = 21
+    inc_dec_rating_service = 22
+    server_administration = 99
+
+
+class HydrusService(BaseModel):
+    """
+    The type definition of service
+    """
+
+    name: str
+    service_key: str
+    service_type: HydrusServiceType = Field(alias="type")
+    type_pretty: str
 
 
 class Hydrus:
@@ -162,3 +196,31 @@ class Hydrus:
         url = f"{self._base_url}/verify_access_key"
         resp = self.__get__(url)
         return _HydrusVerifyAccessKey(**resp.json())
+
+    def get_service(
+        self,
+        name: Optional[str] = None,
+        key: Optional[str] = None,
+    ) -> HydrusService:
+        """
+        Ask the client about a specific service.
+
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#get_service
+
+        :param name: Name of the service
+        :param key: hxe string key of the service
+
+        """
+
+        assert name is None or isinstance(name, str)
+        assert key is None or isinstance(key, str)
+        assert name is not None and key is None or name is None and key is not None
+
+        if name:
+            params = {"service_name": name}
+        if key:
+            params = {"service_key": key}
+
+        url = f"{self._base_url}/get_service"
+        resp = self.__get__(url, params=params)
+        return HydrusService(**resp.json()["service"])
