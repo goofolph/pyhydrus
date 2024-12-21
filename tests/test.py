@@ -28,7 +28,7 @@ class TestHydrusMethods(unittest.TestCase):
                 print(e)
                 sys.exit(1)
 
-        self.hydrus = Hydrus(url, api_key)
+        self.hydrus = hydrus.Hydrus(url, api_key)
         self.hydrus.get_session_key()
 
     def test_version(self):
@@ -61,6 +61,7 @@ class TestHydrusMethods(unittest.TestCase):
 
         sessionkey = self.hydrus.get_session_key()
         self.assertEqual(len(sessionkey), 64)
+        self.assertEqual(sessionkey, self.hydrus.__session_key__)
 
     def test_verify_access_key(self):
         """

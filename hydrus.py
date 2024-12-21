@@ -6,6 +6,7 @@ import json
 from typing import List, Optional
 from urllib.parse import quote
 from enum import Enum, IntEnum
+from time import sleep
 from pydantic import BaseModel, Field
 from rich import print
 from curl_cffi import requests
@@ -152,11 +153,11 @@ class Hydrus:
         :param apikey: The API key to use with the hydrus API.
         :return: returns nothing
         """
-        self._api_key = apikey
-        self._session_key = None
-        self._base_url = url
-        if not self._base_url or len(self._base_url.strip()) == 0:
-            self._base_url = "http://127.0.0.1:45869"
+        self.__api_key__ = apikey
+        self.__session_key__ = None
+        self.base_url = url
+        if not self.base_url or len(self.base_url.strip()) == 0:
+            self.base_url = "http://127.0.0.1:45869"
 
         self._session = requests.Session(impersonate="chrome")
 
@@ -172,10 +173,10 @@ class Hydrus:
         if headers is None:
             headers = {}
 
-        if self._session_key:
-            headers["Hydrus-Client-API-Session-Key"] = self._session_key
-        elif self._api_key:
-            headers["Hydrus-Client-API-Access-Key"] = self._api_key
+        if self.__session_key__:
+            headers["Hydrus-Client-API-Session-Key"] = self.__session_key__
+        elif self.__api_key__:
+            headers["Hydrus-Client-API-Access-Key"] = self.__api_key__
 
         if "Accept" not in headers:
             headers["Accept"] = "application/json"
@@ -187,6 +188,7 @@ class Hydrus:
                 else:
                     params[key] = quote(json.dumps(value))
 
+        sleep(0.1)
         resp = self._session.get(url, params=params, headers=headers)
         resp.raise_for_status()
         return resp
@@ -200,7 +202,7 @@ class Hydrus:
         :return: The version string for hydrus.
         """
 
-        url = f"{self._base_url}/api_version"
+        url = f"{self.base_url}/api_version"
         resp = self.__get__(url)
         version = HydrusApiVersion(**resp.json())
         return f"{version.hydrus_version}.{version.version}"
@@ -219,7 +221,7 @@ class Hydrus:
         :return: The new API for requested permissions
         """
 
-        url = f"{self._base_url}/request_new_permissions"
+        url = f"{self.base_url}/request_new_permissions"
 
         arguments = {"name": name}
         if permits_everything:
@@ -240,10 +242,10 @@ class Hydrus:
         :return: The session key string for hydrus.
         """
 
-        url = f"{self._base_url}/session_key"
+        url = f"{self.base_url}/session_key"
         resp = self.__get__(url)
-        self._session_key = HydrusSessionKey(**resp.json()).session_key
-        return self._session_key
+        self.__session_key__ = HydrusSessionKey(**resp.json()).session_key
+        return self.__session_key__
 
     def get_verify_access_key(self) -> HydrusVerifyAccessKey:
         """
@@ -254,7 +256,7 @@ class Hydrus:
         :return: The verify access key response
         """
 
-        url = f"{self._base_url}/verify_access_key"
+        url = f"{self.base_url}/verify_access_key"
         resp = self.__get__(url)
         return HydrusVerifyAccessKey(**resp.json())
 
@@ -271,6 +273,8 @@ class Hydrus:
         :param name: Name of the service
         :param key: hxe string key of the service
 
+        :return: HydrusService
+
         """
 
         assert name is None or isinstance(name, str)
@@ -282,7 +286,7 @@ class Hydrus:
         if key:
             params = {"service_key": key}
 
-        url = f"{self._base_url}/get_service"
+        url = f"{self.base_url}/get_service"
         resp = self.__get__(url, params=params)
         return HydrusService(**resp.json()["service"])
 
