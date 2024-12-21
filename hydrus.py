@@ -3,13 +3,14 @@ This module contains the main class for the hydrus API.
 """
 
 import json
-from typing import List, Optional
-from urllib.parse import quote
+import os
 from enum import Enum, IntEnum
 from time import sleep
-from pydantic import BaseModel, Field
-from rich import print
+from typing import List, Optional
+from urllib.parse import quote
+
 from curl_cffi import requests
+from pydantic import BaseModel, Field
 
 
 class HydrusApiVersion(BaseModel):
@@ -140,12 +141,32 @@ class HydrusServices(BaseModel):
     services: dict
 
 
+class HydrusAddFileStatus(IntEnum):
+    successfully_imported = 1
+    already_in_databarse = 2
+    previously_deleted = 3
+    failed_import = 4
+    vetoed = 7
+
+
+class HydrusAddFileResponse(BaseModel):
+    """
+    The type definition for the add_file response
+    """
+
+    status: HydrusAddFileStatus
+    filehash: str = Field(alias="hash")
+    note: str
+
+
 class Hydrus:
     """
     The main class for the hydrus API.
     """
 
-    def __init__(self, url: str = "http://127.0.0.1:45869", apikey: str = "") -> None:
+    def __init__(
+        self, url: str = "http://127.0.0.1:45869", apikey: str = ""
+    ) -> None:
         """
         Construct a new Hydrus object
 
@@ -159,25 +180,23 @@ class Hydrus:
         if not self.base_url or len(self.base_url.strip()) == 0:
             self.base_url = "http://127.0.0.1:45869"
 
-        self._session = requests.Session(impersonate="chrome")
+        self.__session__ = requests.Session(impersonate="chrome")
 
-    def __get__(self, url, params=None, headers=None) -> requests.Response:
+    def __get__(self, url, headers=None, params=None) -> requests.Response:
         """
         Make a request to the Hydrus client using available keys, parameters, and headers.
 
         :param url: The URL to API endpoint.
-        :param params: Parameters to be sent in the request URL.
         :param headers: Headers for the request.
+        :param params: Parameters to be sent in the request URL.
         """
 
         if headers is None:
             headers = {}
-
         if self.__session_key__:
             headers["Hydrus-Client-API-Session-Key"] = self.__session_key__
         elif self.__api_key__:
             headers["Hydrus-Client-API-Access-Key"] = self.__api_key__
-
         if "Accept" not in headers:
             headers["Accept"] = "application/json"
 
@@ -189,7 +208,43 @@ class Hydrus:
                     params[key] = quote(json.dumps(value))
 
         sleep(0.1)
-        resp = self._session.get(url, params=params, headers=headers)
+        resp = self.__session__.get(url, params=params, headers=headers)
+        resp.raise_for_status()
+        return resp
+
+    def __post__(
+        self, url, headers=None, params=None, data=None, json=None
+    ) -> requests.Response:
+        """
+        Make a post request to the Hydrus client using available keys, parameters, and headers.
+
+        :param url: The URL to API endpoint
+        :param headers: Headers for the request
+        :param params: Parameters to be sent in the request URL
+        :param data: Data to be send in POST body
+        :param json: JSON data to be send in POST body
+        """
+
+        if headers is None:
+            headers = {}
+        if self.__session_key__:
+            headers["Hydrus-Client-API-Session-Key"] = self.__session_key__
+        elif self.__api_key__:
+            headers["Hydrus-Client-API-Access-Key"] = self.__api_key__
+        if "Accept" not in headers:
+            headers["Accept"] = "application/json"
+
+        if params:
+            for key, value in params.items():
+                if isinstance(value, str):
+                    params[key] = quote(value)
+                else:
+                    params[key] = quote(json.dumps(value))
+
+        sleep(0.1)
+        resp = self.__session__.post(
+            url, headers=headers, params=params, data=data, json=json
+        )
         resp.raise_for_status()
         return resp
 
@@ -279,7 +334,9 @@ class Hydrus:
 
         assert name is None or isinstance(name, str)
         assert key is None or isinstance(key, str)
-        assert name is not None and key is None or name is None and key is not None
+        assert (
+            name is not None and key is None or name is None and key is not None
+        )
 
         if name:
             params = {"service_name": name}
@@ -323,3 +380,160 @@ class Hydrus:
                 all_services.append(HydrusService(**value))
 
         return all_services
+
+    def add_file(
+        self,
+        filepath: str,
+        asStream: bool = False,
+        delete: bool = False,
+        file_domain_key: str = None,
+    ) -> HydrusAddFileResponse:
+        """
+        Tell the client to import a file.
+
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#add_files_add_file
+
+        :param filepath: path to the file
+        :param asStream: send image as data stream, otherwise send path to Hydrus client
+        :param delete: Tells the client to delete the file after import. Only works when sending file path not stream
+        :param file_domain_key: Tells the client which file domain to import to, not available when sending as stream
+
+        :return: HydrusAddFileResponse
+        """
+
+        assert isinstance(filepath, str)
+        assert len(filepath.strip()) > 0
+        assert os.path.exists(filepath)
+        assert isinstance(asStream, bool)
+        if file_domain_key is not None:
+            assert isinstance(file_domain_key, str)
+            assert len(file_domain_key.strip()) > 0
+
+        url = f"{self.base_url}/add_files/add_file"
+        filepath = os.path.abspath(filepath)
+        if asStream:
+            headers = {"Content-Type": "application/octet-stream"}
+            with open(filepath, "rb") as f:
+                resp = self.__post__(url, headers=headers, data=f.read())
+        else:
+            headers = {"Content-Type": "application/json"}
+            data = {"path": filepath}
+            if delete:
+                data["delete_after_successful_import"] = delete
+            if file_domain_key is not None:
+                data["file_service_key"] = file_domain_key
+            resp = self.__post__(url, headers=headers, json=data)
+
+        return HydrusAddFileResponse(**resp.json())
+
+    def delete_files(
+        self,
+        file_id: Optional[int] = None,
+        file_ids: Optional[List[int]] = None,
+        file_hash: Optional[str] = None,
+        file_hashes: Optional[List[str]] = None,
+        file_domain_key: Optional[str] = None,
+        file_domain_keys: Optional[List[str]] = None,
+        reason: Optional[str] = None,
+    ):
+        """
+        Tell the client to send files to the trash.
+
+        :param file_id: id of file to be deleted
+        :param file_ids: ids of files to be deleted
+        :param file_hash: SHA256 of file to be deleted
+        :param file_hashes: SHA256s of files to be deleted
+        :param file_domain_key: file domain service key from which the file(s) are to be deleted
+        :param reason: reason to be attached to delete operation
+        """
+
+        if file_id is not None:
+            assert isinstance(file_id, int)
+        if file_ids is not None:
+            assert isinstance(file_ids, list)
+            for i in file_ids:
+                assert isinstance(i, int)
+        if file_hash is not None:
+            assert isinstance(file_hash, str)
+        if file_hashes is not None:
+            assert isinstance(file_hashes, list)
+            for h in file_hashes:
+                assert isinstance(h, str)
+        if file_domain_key is not None:
+            assert isinstance(file_domain_key, str)
+        if file_domain_keys is not None:
+            assert isinstance(file_domain_keys, list)
+            for k in file_domain_key:
+                assert isinstance(k, str)
+        if reason is not None:
+            assert isinstance(reason, str)
+
+        data = {}
+        if file_id:
+            data["file_id"] = file_id
+        if file_ids:
+            data["file_ids"] = file_ids
+        if file_hash:
+            data["hash"] = file_hash
+        if file_hashes:
+            data["hashes"] = file_hashes
+        if file_domain_key:
+            data["file_service_key"] = file_domain_key
+        if reason:
+            data["reason"] = reason
+
+        url = f"{self.base_url}/add_files/delete_files"
+        self.__post__(url, json=data)
+
+    def undelete_files(
+        self,
+        file_id: Optional[int] = None,
+        file_ids: Optional[List[int]] = None,
+        file_hash: Optional[str] = None,
+        file_hashes: Optional[List[str]] = None,
+        file_domain_key: Optional[str] = None,
+        file_domain_keys: Optional[List[str]] = None,
+    ):
+        """
+        Tell the client to send files to the trash.
+
+        :param file_id: id of file to be deleted
+        :param file_ids: ids of files to be deleted
+        :param file_hash: SHA256 of file to be deleted
+        :param file_hashes: SHA256s of files to be deleted
+        :param file_domain_key: file domain service key from which the file(s) are to be deleted
+        """
+
+        if file_id is not None:
+            assert isinstance(file_id, int)
+        if file_ids is not None:
+            assert isinstance(file_ids, list)
+            for i in file_ids:
+                assert isinstance(i, int)
+        if file_hash is not None:
+            assert isinstance(file_hash, str)
+        if file_hashes is not None:
+            assert isinstance(file_hashes, list)
+            for h in file_hashes:
+                assert isinstance(h, str)
+        if file_domain_key is not None:
+            assert isinstance(file_domain_key, str)
+        if file_domain_keys is not None:
+            assert isinstance(file_domain_keys, list)
+            for k in file_domain_key:
+                assert isinstance(k, str)
+
+        data = {}
+        if file_id:
+            data["file_id"] = file_id
+        if file_ids:
+            data["file_ids"] = file_ids
+        if file_hash:
+            data["hash"] = file_hash
+        if file_hashes:
+            data["hashes"] = file_hashes
+        if file_domain_key:
+            data["file_service_key"] = file_domain_key
+
+        url = f"{self.base_url}/add_files/undelete_files"
+        self.__post__(url, json=data)

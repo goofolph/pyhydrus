@@ -1,3 +1,11 @@
+*.jpg
+*.png
+*.gif
+*.mp4
+*.webm
+*.avi
+*.bmp
+
 # Hydrus test clients
 Hydrus Network/*
 Hydrus.Network.*

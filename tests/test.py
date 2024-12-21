@@ -2,12 +2,49 @@
 This is the test entrypoint for the module.
 """
 
+import hashlib
+import os
 import sys
 import unittest
+
+import numpy
 import yaml
-from rich import print
 from curl_cffi.requests.exceptions import HTTPError
+from PIL import Image
+from rich import print
+
 import hydrus
+
+
+def generate_random_image(
+    filepath: str = "image.jpg", width: int = 512, height: int = 512
+) -> str:
+    """
+    Generates a random image of noise. Used to avoid image hash checksums when imported into Hydrus during testing.
+
+    https://stackoverflow.com/questions/10901049/create-set-of-random-jpgs
+    """
+
+    filepath = os.path.abspath(filepath)
+    a = numpy.random.rand(width, height, 3) * 255
+    im_out = Image.fromarray(a.astype("uint8")).convert("RGB")
+    im_out.save(filepath)
+    return filepath
+
+
+def get_sha256(filepath: str):
+    """
+    Generates the SHA256 checksum of a file.
+
+    :param filepath: path to file to be hashed
+
+    :return: sha256 hash in hex
+    """
+
+    sha256 = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        sha256.update(f.read())
+    return sha256.hexdigest()
 
 
 class TestHydrusMethods(unittest.TestCase):
@@ -51,7 +88,7 @@ class TestHydrusMethods(unittest.TestCase):
                 [0, 1],
             )
             self.assertEqual(len(apikey), 64)
-        except HTTPError as err:
+        except HTTPError:
             print("Warning: Request New Permissions Window Not Open")
 
     def test_session_key(self):
@@ -79,7 +116,9 @@ class TestHydrusMethods(unittest.TestCase):
         service = self.hydrus.get_service("my tags")
         self.assertTrue(isinstance(service.name, str))
         self.assertEqual(service.name, "my tags")
-        self.assertTrue(isinstance(service.service_type, hydrus.HydrusServiceType))
+        self.assertTrue(
+            isinstance(service.service_type, hydrus.HydrusServiceType)
+        )
         self.assertTrue(isinstance(service.type_pretty, str))
 
     def test_get_services(self):
@@ -91,3 +130,64 @@ class TestHydrusMethods(unittest.TestCase):
         self.assertNotEqual(services, None)
         self.assertTrue(isinstance(services, list))
         self.assertTrue(isinstance(services[0], hydrus.HydrusService))
+
+    def test_add_file_path(self):
+        """
+        Test adding file by file path
+        """
+
+        image_path = generate_random_image("image.jpg")
+        image_hash = get_sha256(image_path)
+
+        added = self.hydrus.add_file(image_path)
+        self.assertTrue(
+            added.status
+            in [
+                hydrus.HydrusAddFileStatus.successfully_imported,
+                hydrus.HydrusAddFileStatus.already_in_databarse,
+            ]
+        )
+        self.assertEqual(added.filehash, image_hash)
+
+    def test_add_file_stream(self):
+        """
+        Test adding file by byte stream
+        """
+
+        image_path = generate_random_image("image.jpg")
+        image_hash = get_sha256(image_path)
+
+        added = self.hydrus.add_file(image_path, asStream=True)
+        self.assertTrue(
+            added.status
+            in [
+                hydrus.HydrusAddFileStatus.successfully_imported,
+                hydrus.HydrusAddFileStatus.already_in_databarse,
+            ]
+        )
+        self.assertEqual(added.filehash, image_hash)
+
+    def test_delete_files(self):
+        """
+        Test deleting files
+        """
+
+        image_path = generate_random_image("image.jpg")
+        image_hash = get_sha256(image_path)
+
+        self.hydrus.add_file(image_path)
+
+        self.hydrus.delete_files(file_hash=image_hash)
+
+    def test_undelete_files(self):
+        """
+        Test undeleting files
+        """
+
+        image_path = generate_random_image("image.jpg")
+        image_hash = get_sha256(image_path)
+
+        self.hydrus.add_file(image_path)
+
+        self.hydrus.delete_files(file_hash=image_hash)
+        self.hydrus.undelete_files(file_hash=image_hash)
