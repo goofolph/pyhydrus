@@ -11,7 +11,7 @@ from rich import print
 from curl_cffi import requests
 
 
-class _HydrusApiVersion(BaseModel):
+class HydrusApiVersion(BaseModel):
     """
     The type definition of get api version response
     """
@@ -20,7 +20,7 @@ class _HydrusApiVersion(BaseModel):
     hydrus_version: int
 
 
-class _HydrusRequestNewPermission(BaseModel):
+class HydrusRequestNewPermission(BaseModel):
     """
     The type definition of new permission request
     """
@@ -28,7 +28,7 @@ class _HydrusRequestNewPermission(BaseModel):
     access_key: str
 
 
-class _HydrusSessionKey(BaseModel):
+class HydrusSessionKey(BaseModel):
     """
     The type definition of session key response
     """
@@ -36,18 +36,47 @@ class _HydrusSessionKey(BaseModel):
     session_key: str
 
 
-class _HydrusVerifyAccessKey(BaseModel):
+class HydrusBasicPermission(IntEnum):
+    """
+    The type definition of basic permissions
+
+    https://hydrusnetwork.github.io/hydrus/developer_api.html#request_new_permissions
+    """
+
+    import_and_edit_urls = 0
+    import_and_delete_files = 1
+    edit_file_tags = 2
+    search_for_and_fetch_files = 3
+    manage_pages = 4
+    manage_cookies_and_headers = 5
+    manage_database = 6
+    edit_file_notes = 7
+    edit_file_relationships = 8
+    edit_file_ratings = 9
+    manage_popups = 10
+    edit_file_times = 11
+    commit_pending = 12
+    see_local_paths = 13
+
+
+class HydrusVerifyAccessKey(BaseModel):
     """
     The type definition of verify access key response
     """
 
     name: str
     permits_everything: bool
-    basic_permissions: List[int]
+    basic_permissions: List[HydrusBasicPermission]
     human_description: str
 
 
 class HydrusServiceType(IntEnum):
+    """
+    The type definition of service types
+
+    https://hydrusnetwork.github.io/hydrus/developer_api.html#services_object
+    """
+
     tag_repository = 0
     file_repository = 1
     local_file_domain = 2
