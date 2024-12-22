@@ -191,3 +191,36 @@ class TestHydrusMethods(unittest.TestCase):
 
         self.hydrus.delete_files(file_hash=image_hash)
         self.hydrus.undelete_files(file_hash=image_hash)
+
+    def test_clear_file_deletion_record(self):
+        """
+        Test clearing file deletion record
+        """
+
+        image_path = generate_random_image("image.jpg")
+        image_hash = get_sha256(image_path)
+
+        added = self.hydrus.add_file(image_path)
+        self.assertEqual(
+            added.status,
+            hydrus.HydrusAddFileStatus.successfully_imported,
+        )
+
+        self.hydrus.delete_files(file_hash=image_hash)
+        added = self.hydrus.add_file(image_path)
+        self.assertEqual(
+            added.status,
+            hydrus.HydrusAddFileStatus.previously_deleted,
+        )
+
+        self.hydrus.delete_files(
+            file_hash=image_hash,
+            file_domain_key="616c6c206c6f63616c2066696c6573",
+        )
+        self.hydrus.clear_file_deletion_record(file_hash=image_hash)
+        added = self.hydrus.add_file(image_path)
+        self.assertEqual(
+            added.status,
+            hydrus.HydrusAddFileStatus.successfully_imported,
+        )
+        self.hydrus.delete_files(file_hash=image_hash)
