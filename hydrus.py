@@ -576,3 +576,58 @@ class Hydrus:
 
         url = f"{self.base_url}/add_files/clear_file_deletion_record"
         self.__post__(url, json=data)
+
+    def migrate_files(
+        self,
+        file_id: Optional[int] = None,
+        file_ids: Optional[List[int]] = None,
+        file_hash: Optional[str] = None,
+        file_hashes: Optional[List[str]] = None,
+        file_domain_key: Optional[str] = None,
+        file_domain_keys: Optional[List[str]] = None,
+    ):
+        """
+        Copy files from one local file domain to another.
+
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#add_files_migrate_files
+
+        :param file_id: id of file to be migrated
+        :param file_ids: ids of files to be migrated
+        :param file_hash: SHA256 of file to be migrated
+        :param file_hashes: SHA256s of files to be migrated
+        :param file_domain_key: file domain service key from which the file(s) are to be migrated to
+        """
+
+        if file_id is not None:
+            assert isinstance(file_id, int)
+        if file_ids is not None:
+            assert isinstance(file_ids, list)
+            for i in file_ids:
+                assert isinstance(i, int)
+        if file_hash is not None:
+            assert isinstance(file_hash, str)
+        if file_hashes is not None:
+            assert isinstance(file_hashes, list)
+            for h in file_hashes:
+                assert isinstance(h, str)
+        if file_domain_key is not None:
+            assert isinstance(file_domain_key, str)
+        if file_domain_keys is not None:
+            assert isinstance(file_domain_keys, list)
+            for k in file_domain_key:
+                assert isinstance(k, str)
+
+        data = {}
+        if file_id:
+            data["file_id"] = file_id
+        if file_ids:
+            data["file_ids"] = file_ids
+        if file_hash:
+            data["hash"] = file_hash
+        if file_hashes:
+            data["hashes"] = file_hashes
+        if file_domain_key:
+            data["file_service_key"] = file_domain_key
+
+        url = f"{self.base_url}/add_files/migrate_files"
+        self.__post__(url, json=data)
