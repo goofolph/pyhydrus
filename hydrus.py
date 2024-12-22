@@ -5,7 +5,6 @@ This module contains the main class for the hydrus API.
 import json
 import os
 from enum import Enum, IntEnum
-from time import sleep
 from typing import List, Optional
 from urllib.parse import quote
 
@@ -207,7 +206,6 @@ class Hydrus:
                 else:
                     params[key] = quote(json.dumps(value))
 
-        sleep(0.1)
         resp = self.__session__.get(url, params=params, headers=headers)
         resp.raise_for_status()
         return resp
@@ -241,7 +239,6 @@ class Hydrus:
                 else:
                     params[key] = quote(json.dumps(value))
 
-        sleep(0.1)
         resp = self.__session__.post(
             url, headers=headers, params=params, data=data, json=json
         )
