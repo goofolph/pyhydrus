@@ -537,3 +537,45 @@ class Hydrus:
 
         url = f"{self.base_url}/add_files/undelete_files"
         self.__post__(url, json=data)
+
+    def clear_file_deletion_record(
+        self,
+        file_id: Optional[int] = None,
+        file_ids: Optional[List[int]] = None,
+        file_hash: Optional[str] = None,
+        file_hashes: Optional[List[str]] = None,
+    ):
+        """
+        Tell the client to forget that it once deleted files.
+
+        :param file_id: The file id for which record to be deleted
+        :param file_ids: The file ids for which records to be deleted
+        :param file_hash: The file hash for which record to be deleted
+        :param file_hashes: The file hashes for which records to be deleted
+        """
+
+        if file_id is not None:
+            assert isinstance(file_id, int)
+        if file_ids is not None:
+            assert isinstance(file_ids, list)
+            for i in file_ids:
+                assert isinstance(i, int)
+        if file_hash is not None:
+            assert isinstance(file_hash, str)
+        if file_hashes is not None:
+            assert isinstance(file_hashes, list)
+            for h in file_hashes:
+                assert isinstance(h, str)
+
+        data = {}
+        if file_id:
+            data["file_id"] = file_id
+        if file_ids:
+            data["file_ids"] = file_ids
+        if file_hash:
+            data["hash"] = file_hash
+        if file_hashes:
+            data["hashes"] = file_hashes
+
+        url = f"{self.base_url}/add_files/clear_file_deletion_record"
+        self.__post__(url, json=data)
