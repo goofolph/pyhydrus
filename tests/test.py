@@ -17,7 +17,7 @@ import hydrus
 
 
 def generate_random_image(
-    filepath: str = "image.jpg", width: int = 512, height: int = 512
+    filepath: str = "image.jpg", width: int = 20, height: int = 20
 ) -> str:
     """
     Generates a random image of noise. Used to avoid image hash checksums when imported into Hydrus during testing.
@@ -148,6 +148,7 @@ class TestHydrusMethods(unittest.TestCase):
             ]
         )
         self.assertEqual(added.filehash, image_hash)
+        self.hydrus.delete_files(file_hash=image_hash)
 
     def test_add_file_stream(self):
         """
@@ -166,6 +167,7 @@ class TestHydrusMethods(unittest.TestCase):
             ]
         )
         self.assertEqual(added.filehash, image_hash)
+        self.hydrus.delete_files(file_hash=image_hash)
 
     def test_delete_files(self):
         """
@@ -191,6 +193,7 @@ class TestHydrusMethods(unittest.TestCase):
 
         self.hydrus.delete_files(file_hash=image_hash)
         self.hydrus.undelete_files(file_hash=image_hash)
+        self.hydrus.delete_files(file_hash=image_hash)
 
     def test_clear_file_deletion_record(self):
         """
