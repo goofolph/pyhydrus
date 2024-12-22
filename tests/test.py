@@ -227,3 +227,7 @@ class TestHydrusMethods(unittest.TestCase):
             hydrus.HydrusAddFileStatus.successfully_imported,
         )
         self.hydrus.delete_files(file_hash=image_hash)
+
+    def test_migrate_files(self):
+        # TODO add testing after another local file domain can be added
+        pass
