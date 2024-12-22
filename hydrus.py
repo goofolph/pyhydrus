@@ -436,6 +436,8 @@ class Hydrus:
         """
         Tell the client to send files to the trash.
 
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#add_files_delete_files
+
         :param file_id: id of file to be deleted
         :param file_ids: ids of files to be deleted
         :param file_hash: SHA256 of file to be deleted
@@ -492,13 +494,15 @@ class Hydrus:
         file_domain_keys: Optional[List[str]] = None,
     ):
         """
-        Tell the client to send files to the trash.
+        Tell the client to remove files to the trash.
 
-        :param file_id: id of file to be deleted
-        :param file_ids: ids of files to be deleted
-        :param file_hash: SHA256 of file to be deleted
-        :param file_hashes: SHA256s of files to be deleted
-        :param file_domain_key: file domain service key from which the file(s) are to be deleted
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#add_files_undelete_files
+
+        :param file_id: id of file to be undeleted
+        :param file_ids: ids of files to be undeleted
+        :param file_hash: SHA256 of file to be undeleted
+        :param file_hashes: SHA256s of files to be undeleted
+        :param file_domain_key: file domain service key from which the file(s) are to be undeleted
         """
 
         if file_id is not None:
@@ -544,6 +548,8 @@ class Hydrus:
     ):
         """
         Tell the client to forget that it once deleted files.
+
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#add_files_clear_file_deletion_record
 
         :param file_id: The file id for which record to be deleted
         :param file_ids: The file ids for which records to be deleted
