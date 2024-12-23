@@ -368,6 +368,20 @@ class Hydrus:
         :return: HydrusServices
         """
 
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [
+                    HydrusBasicPermission.import_and_delete_files,
+                    HydrusBasicPermission.edit_file_tags,
+                    HydrusBasicPermission.manage_pages,
+                    HydrusBasicPermission.search_for_and_fetch_files,
+                ],
+            )
+        )
+
         url = f"{self.base_url}/get_services"
         all_services = []
         all_service_keys = []
