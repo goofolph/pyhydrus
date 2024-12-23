@@ -338,7 +338,7 @@ class Hydrus:
 
         if self.__verify_access_key__ is None:
             self.get_verify_access_key()
-        assert any(
+        assert self.__verify_access_key__.permits_everything or any(
             map(
                 lambda e: e in self.__verify_access_key__.basic_permissions,
                 [
@@ -370,7 +370,7 @@ class Hydrus:
 
         if self.__verify_access_key__ is None:
             self.get_verify_access_key()
-        assert any(
+        assert self.__verify_access_key__.permits_everything or any(
             map(
                 lambda e: e in self.__verify_access_key__.basic_permissions,
                 [
