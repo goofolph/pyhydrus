@@ -164,7 +164,7 @@ class Hydrus:
     """
 
     def __init__(
-        self, url: str = "http://127.0.0.1:45869", apikey: str = ""
+        self, url: str = "http://127.0.0.1:45869", apikey: Optional[str] = None
     ) -> None:
         """
         Construct a new Hydrus object
@@ -175,6 +175,7 @@ class Hydrus:
         """
         self.__api_key__ = apikey
         self.__session_key__ = None
+        self.__verify_access_key__ = None
         self.base_url = url
         if not self.base_url or len(self.base_url.strip()) == 0:
             self.base_url = "http://127.0.0.1:45869"
@@ -310,7 +311,8 @@ class Hydrus:
 
         url = f"{self.base_url}/verify_access_key"
         resp = self.__get__(url)
-        return HydrusVerifyAccessKey(**resp.json())
+        self.__verify_access_key__ = HydrusVerifyAccessKey(**resp.json())
+        return self.__verify_access_key__
 
     def get_service(
         self,
@@ -326,7 +328,6 @@ class Hydrus:
         :param key: hxe string key of the service
 
         :return: HydrusService
-
         """
 
         assert name is None or isinstance(name, str)
