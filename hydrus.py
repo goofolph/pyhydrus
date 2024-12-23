@@ -336,6 +336,20 @@ class Hydrus:
             name is not None and key is None or name is None and key is not None
         )
 
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [
+                    HydrusBasicPermission.import_and_delete_files,
+                    HydrusBasicPermission.edit_file_tags,
+                    HydrusBasicPermission.manage_pages,
+                    HydrusBasicPermission.search_for_and_fetch_files,
+                ],
+            )
+        )
+
         if name:
             params = {"service_name": name}
         if key:
