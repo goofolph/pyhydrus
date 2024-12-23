@@ -435,6 +435,16 @@ class Hydrus:
             assert isinstance(file_domain_key, str)
             assert len(file_domain_key.strip()) > 0
 
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+
+        assert self.__verify_access_key__.permits_everything or any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [HydrusBasicPermission.import_and_delete_files],
+            )
+        )
+
         url = f"{self.base_url}/add_files/add_file"
         filepath = os.path.abspath(filepath)
         if asStream:
