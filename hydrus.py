@@ -626,6 +626,15 @@ class Hydrus:
             for h in file_hashes:
                 assert isinstance(h, str)
 
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert self.__verify_access_key__.permits_everything or any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [HydrusBasicPermission.import_and_delete_files],
+            )
+        )
+
         data = {}
         if file_id:
             data["file_id"] = file_id
