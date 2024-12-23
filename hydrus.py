@@ -164,7 +164,7 @@ class Hydrus:
     """
 
     def __init__(
-        self, url: str = "http://127.0.0.1:45869", apikey: str = ""
+        self, url: str = "http://127.0.0.1:45869", apikey: Optional[str] = None
     ) -> None:
         """
         Construct a new Hydrus object
@@ -175,6 +175,7 @@ class Hydrus:
         """
         self.__api_key__ = apikey
         self.__session_key__ = None
+        self.__verify_access_key__ = None
         self.base_url = url
         if not self.base_url or len(self.base_url.strip()) == 0:
             self.base_url = "http://127.0.0.1:45869"
@@ -310,7 +311,8 @@ class Hydrus:
 
         url = f"{self.base_url}/verify_access_key"
         resp = self.__get__(url)
-        return HydrusVerifyAccessKey(**resp.json())
+        self.__verify_access_key__ = HydrusVerifyAccessKey(**resp.json())
+        return self.__verify_access_key__
 
     def get_service(
         self,
@@ -326,13 +328,26 @@ class Hydrus:
         :param key: hxe string key of the service
 
         :return: HydrusService
-
         """
 
         assert name is None or isinstance(name, str)
         assert key is None or isinstance(key, str)
         assert (
             name is not None and key is None or name is None and key is not None
+        )
+
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert self.__verify_access_key__.permits_everything or any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [
+                    HydrusBasicPermission.import_and_delete_files,
+                    HydrusBasicPermission.edit_file_tags,
+                    HydrusBasicPermission.manage_pages,
+                    HydrusBasicPermission.search_for_and_fetch_files,
+                ],
+            )
         )
 
         if name:
@@ -352,6 +367,20 @@ class Hydrus:
 
         :return: HydrusServices
         """
+
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert self.__verify_access_key__.permits_everything or any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [
+                    HydrusBasicPermission.import_and_delete_files,
+                    HydrusBasicPermission.edit_file_tags,
+                    HydrusBasicPermission.manage_pages,
+                    HydrusBasicPermission.search_for_and_fetch_files,
+                ],
+            )
+        )
 
         url = f"{self.base_url}/get_services"
         all_services = []
@@ -405,6 +434,15 @@ class Hydrus:
         if file_domain_key is not None:
             assert isinstance(file_domain_key, str)
             assert len(file_domain_key.strip()) > 0
+
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert self.__verify_access_key__.permits_everything or any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [HydrusBasicPermission.import_and_delete_files],
+            )
+        )
 
         url = f"{self.base_url}/add_files/add_file"
         filepath = os.path.abspath(filepath)
@@ -467,6 +505,15 @@ class Hydrus:
         if reason is not None:
             assert isinstance(reason, str)
 
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert self.__verify_access_key__.permits_everything or any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [HydrusBasicPermission.import_and_delete_files],
+            )
+        )
+
         data = {}
         if file_id:
             data["file_id"] = file_id
@@ -524,6 +571,15 @@ class Hydrus:
             for k in file_domain_key:
                 assert isinstance(k, str)
 
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert self.__verify_access_key__.permits_everything or any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [HydrusBasicPermission.import_and_delete_files],
+            )
+        )
+
         data = {}
         if file_id:
             data["file_id"] = file_id
@@ -569,6 +625,15 @@ class Hydrus:
             assert isinstance(file_hashes, list)
             for h in file_hashes:
                 assert isinstance(h, str)
+
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert self.__verify_access_key__.permits_everything or any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [HydrusBasicPermission.import_and_delete_files],
+            )
+        )
 
         data = {}
         if file_id:
@@ -622,6 +687,15 @@ class Hydrus:
             assert isinstance(file_domain_keys, list)
             for k in file_domain_key:
                 assert isinstance(k, str)
+
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert self.__verify_access_key__.permits_everything or any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [HydrusBasicPermission.import_and_delete_files],
+            )
+        )
 
         data = {}
         if file_id:
