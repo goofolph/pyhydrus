@@ -481,6 +481,7 @@ class Hydrus:
         :param file_hash: SHA256 of file to be deleted
         :param file_hashes: SHA256s of files to be deleted
         :param file_domain_key: file domain service key from which the file(s) are to be deleted
+        :param file_domain_keys: file domain service keys from which the file(s) are to be deleted
         :param reason: reason to be attached to delete operation
         """
 
@@ -525,6 +526,8 @@ class Hydrus:
             data["hashes"] = file_hashes
         if file_domain_key:
             data["file_service_key"] = file_domain_key
+        if file_domain_keys:
+            data["file_service_keys"] = file_domain_keys
         if reason:
             data["reason"] = reason
 
@@ -550,6 +553,7 @@ class Hydrus:
         :param file_hash: SHA256 of file to be undeleted
         :param file_hashes: SHA256s of files to be undeleted
         :param file_domain_key: file domain service key from which the file(s) are to be undeleted
+        :param file_domain_keys: file domain service keys from which the file(s) are to be undeleted
         """
 
         if file_id is not None:
@@ -591,6 +595,8 @@ class Hydrus:
             data["hashes"] = file_hashes
         if file_domain_key:
             data["file_service_key"] = file_domain_key
+        if file_domain_keys:
+            data["file_service_keys"] = file_domain_keys
 
         url = f"{self.base_url}/add_files/undelete_files"
         self.__post__(url, json=data)
@@ -667,6 +673,7 @@ class Hydrus:
         :param file_hash: SHA256 of file to be migrated
         :param file_hashes: SHA256s of files to be migrated
         :param file_domain_key: file domain service key from which the file(s) are to be migrated to
+        :param file_domain_keys: file domain service keys from which the file(s) are to be migrated to
         """
 
         if file_id is not None:
@@ -708,6 +715,8 @@ class Hydrus:
             data["hashes"] = file_hashes
         if file_domain_key:
             data["file_service_key"] = file_domain_key
+        if file_domain_keys:
+            data["file_service_keys"] = file_domain_keys
 
         url = f"{self.base_url}/add_files/migrate_files"
         self.__post__(url, json=data)
