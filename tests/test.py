@@ -231,3 +231,11 @@ class TestHydrusMethods(unittest.TestCase):
     def test_migrate_files(self):
         # TODO add testing after another local file domain can be added
         pass
+
+    def test_achive_files(self):
+        image_path = generate_random_image("image.jpg")
+        image_hash = get_sha256(image_path)
+        self.hydrus.add_file(image_path, asStream=True)
+        self.hydrus.archive_files(file_hash=image_hash)
+        # TODO add search here to verify
+        self.hydrus.delete_files(file_hash=image_hash)

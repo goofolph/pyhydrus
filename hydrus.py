@@ -720,3 +720,57 @@ class Hydrus:
 
         url = f"{self.base_url}/add_files/migrate_files"
         self.__post__(url, json=data)
+
+    def archive_files(
+        self,
+        file_id: Optional[int] = None,
+        file_ids: Optional[List[int]] = None,
+        file_hash: Optional[str] = None,
+        file_hashes: Optional[List[str]] = None,
+    ):
+        """
+        Tell the client to archive inboxed files.
+
+        https://hydrusnetwork.github.io/hydrus/developer_api.html#add_files_archive_files
+
+        :param file_id: id of file to be archived
+        :param file_ids: ids of files to be archived
+        :param file_hash: SHA256 of file to be archived
+        :param file_hashes: SHA256s of files to be archived
+        :param file_domain_key: file domain service key from which the file(s) are to be archived
+        """
+
+        if file_id is not None:
+            assert isinstance(file_id, int)
+        if file_ids is not None:
+            assert isinstance(file_ids, list)
+            for i in file_ids:
+                assert isinstance(i, int)
+        if file_hash is not None:
+            assert isinstance(file_hash, str)
+        if file_hashes is not None:
+            assert isinstance(file_hashes, list)
+            for h in file_hashes:
+                assert isinstance(h, str)
+
+        if self.__verify_access_key__ is None:
+            self.get_verify_access_key()
+        assert self.__verify_access_key__.permits_everything or any(
+            map(
+                lambda e: e in self.__verify_access_key__.basic_permissions,
+                [HydrusBasicPermission.import_and_delete_files],
+            )
+        )
+
+        data = {}
+        if file_id:
+            data["file_id"] = file_id
+        if file_ids:
+            data["file_ids"] = file_ids
+        if file_hash:
+            data["hash"] = file_hash
+        if file_hashes:
+            data["hashes"] = file_hashes
+
+        url = f"{self.base_url}/add_files/archive_files"
+        self.__post__(url, json=data)
